@@ -1,0 +1,50 @@
+#version: '2.1'
+
+services:
+  helloapp.local:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: hello-app
+    container_name: hello-app
+    healthcheck:
+      test: ["CMD", "curl", "localhost/ping"]
+      interval: 30s
+      timeout: 30s
+      retries: 9
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "880:80"
+      - "882:82"
+    links:
+      - db:db
+    volumes:
+      - .:/app
+      - ./helloapp:/usr/local/lib/python3.6/site-packages/helloapp
+    environment:
+      ENVIRON: "LOCAL"
+      PGM_TPL: "postgresql://helloapp:helloapp@db:5432/helloapp"
+    command: python /app/helloapp/app.py
+    restart: on-failure
+
+  db:
+    image: postgres:14
+    container_name: hello-db
+    volumes:
+      - ${PWD}/helloapp/migrations/000_init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      POSTGRES_DB: helloapp
+      POSTGRES_PASSWORD: helloapp
+      POSTGRES_USER: helloapp
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "helloapp"]
+      interval: 30s
+      timeout: 30s
+      retries: 9
+    ports:
+      - "5432:5432/tcp"
+    stdin_open: true
+    tty: true
+    restart: on-failure

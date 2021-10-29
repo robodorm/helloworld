@@ -1,0 +1,59 @@
+---
+- config:
+    - testset: "Hello test"
+    - variable_binds: !!map {
+      "h1_k": "Content-Type", "h1_v": "application/json"}
+
+- test:
+    - name: "app is pingable"
+    - url: "/ping"
+    - method: "GET"
+    - expected_status: [200]
+    - validators:
+          - compare: {raw_body: "", comparator: "eq", expected: 'ok'}
+
+- test:
+    - name: "username doesn't exists"
+    - url: "/hello/username_doesnt_exists"
+    - method: "GET"
+    - expected_status: [400]
+
+- test:
+    - name: "username created"
+    - url: "/hello/username"
+    - method: "PUT"
+    - headers: {'template': {"$h1_k": "$h1_v"}}
+    - body: {'template': '{"dateOfBirth": "$date_a"}' }
+    - expected_status: [204]
+
+- test:
+    - name: "username already exists"
+    - url: "/hello/username"
+    - method: "PUT"
+    - headers: {'template': {"$h1_k": "$h1_v"}}
+    - body: {'template': '{"dateOfBirth": "$date_a"}' }
+    - expected_status: [400]
+
+- test:
+    - name: "Get message ONE"
+    - url: "/hello/username"
+    - method: "GET"
+    - expected_status: [200]
+    - validators:
+          - compare: {raw_body: "", comparator: "eq", expected: '{"message": "Hello, username! Your birthday is in 100 day(s)!"}'}
+
+- test:
+    - name: "create user B"
+    - url: "/hello/user_b"
+    - method: "PUT"
+    - headers: {'template': {"$h1_k": "$h1_v"}}
+    - body: {'template': '{"dateOfBirth": "$date_b"}' }
+    - expected_status: [204]
+
+- test:
+    - name: "Get message TWO"
+    - url: "/hello/user_b"
+    - method: "GET"
+    - expected_status: [200]
+    - validators:
+          - compare: {raw_body: "", comparator: "eq", expected: '{"message": "Hello, user_b! Happy Birthday!"}'}
