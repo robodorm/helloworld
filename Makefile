@@ -1,4 +1,4 @@
-.PHONY: rebuild build terminate start stop restart test_rest test_unit
+.PHONY: rebuild build terminate start stop clean restart test_rest test_unit
 
 DATE_A := $(shell date -d "100 day ago" +%F)
 DATE_B := $(shell date +%F)
@@ -7,6 +7,8 @@ DATE_B := $(shell date +%F)
 # build a docker container
 build:
 	-docker build . -t helloapp
+
+clean:
 	-docker rmi $(docker images -q -f dangling=true)
 
 # rebuild the container
@@ -27,24 +29,8 @@ start:
 restart: terminate start
 
 # run rest test
+# a "restart" is gonna wipe a local database
 test_rest: restart
 	-sleep 3
 	-pyresttest "http://localhost:5123/" helloapp/tests/rest.yml --vars='{"date_a": "$(DATE_A)", "date_b": "$(DATE_B)"}'
-
-# run rest test
-test_unit:
-	-docker exec -it helloapp "cd /app/helloapp/tests && python -m unittest"
-
-
-#########
-# aliases
-b: build
-s: start
-r: restart
-t: terminate
-rb: rebuild
-
-# tests
-tr: test_rest
-tu: test_unit
 

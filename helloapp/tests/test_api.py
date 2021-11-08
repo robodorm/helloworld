@@ -5,7 +5,7 @@ from helloapp.app import is_valid_date_format
 
 class TestApi(unittest.TestCase):
     """
-    Test the API
+    Test the API's is_valid_date_format function.
     """
 
     def test_is_valid_date_format(self):
